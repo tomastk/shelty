@@ -1,0 +1,31 @@
+# DATABASE CONFIG
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/shelty
+    username: shelty
+    password: shelty1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+admin:
+  super-admin:
+    password: gonzalo11
+
+# OPEN API SWAGGER CONFIG
+
+springdoc:
+  pathsToMatch: /api/v1/**
+  swagger-ui:
+    disable-swagger-default-url: true
+    path: /docs
+
+jwt:
+  secret:
+    key: f7ba47c7648ebf9950413e8703cb7521fd4013b67d90d712efb28d555a17dcd9
