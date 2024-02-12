@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import tomastk.shelty.models.dtos.UserDataDTO;
 import tomastk.shelty.models.entities.UserData;
 import tomastk.shelty.models.payloads.MensajeResponse;
-import tomastk.shelty.services.impl.SecurityContextHandler;
+import tomastk.shelty.services.impl.AdminSecurityContextHandler;
 import tomastk.shelty.services.impl.UserDataImpl;
 import tomastk.shelty.user.Role;
 
@@ -77,7 +77,7 @@ public class UserDataController {
     }
 
     private boolean userIsAuthorizated(long userId) {
-        return SecurityContextHandler.getUserId() == userId || SecurityContextHandler.getUserRole() == Role.ADMIN;
+        return AdminSecurityContextHandler.getUserId() == userId || AdminSecurityContextHandler.getUserRole() == Role.ADMIN;
     }
 
 }

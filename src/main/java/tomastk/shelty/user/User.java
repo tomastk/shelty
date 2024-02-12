@@ -23,11 +23,15 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue
     Integer id;
-
     @Column(nullable = false)
     String username;
-
     String password;
+    String email;
+    boolean verified;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_code_id")
+    UserCode userCode;
 
     @Enumerated(EnumType.STRING)
     Role role;

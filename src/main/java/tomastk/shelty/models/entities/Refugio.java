@@ -31,6 +31,9 @@ public class Refugio {
     @JsonManagedReference
     private List<Animal> animales;
 
+    @Column(name="creator_id")
+    private long creatorID;
+
     @ElementCollection
     private List<Long> administradores;
 }

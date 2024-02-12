@@ -6,8 +6,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
+import tomastk.shelty.services.impl.AdminSecurityContextHandler;
 import tomastk.shelty.config.Messages;
 import tomastk.shelty.models.dtos.AnimalResponseDTO;
 import tomastk.shelty.models.entities.Especie;
@@ -17,7 +18,6 @@ import tomastk.shelty.models.entities.Animal;
 import tomastk.shelty.models.entities.Refugio;
 import tomastk.shelty.models.payloads.MensajeResponse;
 import tomastk.shelty.models.validators.AnimalValidator;
-import tomastk.shelty.user.Role;
 
 import java.util.HashMap;
 import java.util.List;
@@ -69,11 +69,10 @@ public class AnimalController {
         return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
     }
 
-
     // Post
     @PostMapping(ENTITY_NAME)
     public ResponseEntity<MensajeResponse> createAnimal(@RequestBody AnimalRequestDTO animalToCreate) {
-        long requestUserID = SecurityContextHandler.getUserId();
+        long requestUserID = AdminSecurityContextHandler.getUserId();
 
         Especie animalEspecie = especieService.findById(animalToCreate.getEspecie_id());
 
@@ -130,7 +129,7 @@ public class AnimalController {
             return responseService.sendErrorResponse(errors, HttpStatus.NOT_FOUND);
         }
 
-        boolean userIsAuthorizated = this.userIsAuthorizated(animalToUpdate);
+        boolean userIsAuthorizated = this.isUserAuthorized(animalToUpdate);
 
         if (!userIsAuthorizated) {
             errors.put(Messages.nonAuthorizatedError, Messages.detailNonAuthorizatedError(ENTITY_NAME));
@@ -172,14 +171,18 @@ public class AnimalController {
             errors.put(Messages.nonFoundError, Messages.detailNotFoundError(ENTITY_NAME));
             return responseService.sendErrorResponse(errors, HttpStatus.NOT_FOUND);
         }
-        boolean userIsAuthorizated = this.userIsAuthorizated(animalToDelete);
-        if (!userIsAuthorizated) {
+
+
+        boolean userIsAuthorizated = this.isUserAuthorized(animalToDelete);
+
+        if (!userIsAuthorizated){
             errors.put(Messages.nonAuthorizatedError, Messages.detailNonAuthorizatedError(ENTITY_NAME));
             return responseService.sendErrorResponse(errors, HttpStatus.UNAUTHORIZED);
         }
+
+
         try {
             service.delete(animalToDelete);
-
             return responseService.sendSuccessResponse(
                     Messages.detailsSuccessDeleting(ENTITY_NAME),
                     buildAnimalWithIdDTO(animalToDelete),
@@ -195,8 +198,13 @@ public class AnimalController {
         }
     }
 
-    public boolean userIsAuthorizated(Animal animalToCheck) {
-        return animalToCheck.getOwnerId() == SecurityContextHandler.getUserId() || SecurityContextHandler.getUserRole() == Role.ADMIN;
+    /**
+     * Checks if the user is authorized to access the animal information.
+     * @param animalToCheck The animal to check authorization for.
+     * @return True if the user is authorized, false otherwise.
+     */
+    public boolean isUserAuthorized(Animal animalToCheck) {
+        return animalToCheck.getOwnerId() == AdminSecurityContextHandler.getUserId() || AdminSecurityContextHandler.isAdmin();
     }
 
 

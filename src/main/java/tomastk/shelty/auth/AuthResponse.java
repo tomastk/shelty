@@ -9,5 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AuthResponse {
     String token;
+    String message;
     Object authError;
 }

@@ -53,7 +53,6 @@ public class ApplicationConfig {
     @PostConstruct
     public void init() {
         PasswordEncoder encoder = new BCryptPasswordEncoder();
-
         if (!userRepository.findByUsername("superadmin").isPresent()) {
             User superAdmin = User.builder()
                     .username("superadmin")
@@ -62,7 +61,6 @@ public class ApplicationConfig {
                     .build();
             userRepository.save(superAdmin);
         }
-
     }
 
     @Bean

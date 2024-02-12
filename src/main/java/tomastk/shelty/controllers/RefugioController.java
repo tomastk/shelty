@@ -7,16 +7,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tomastk.shelty.config.Messages;
-import tomastk.shelty.services.impl.ResponseImpl;
-import tomastk.shelty.services.impl.SecurityContextHandler;
+import tomastk.shelty.services.impl.*;
 import tomastk.shelty.models.dtos.RefugioDTO;
 import tomastk.shelty.models.entities.Animal;
 import tomastk.shelty.models.entities.Refugio;
 import tomastk.shelty.models.payloads.CreateRefugioRequest;
 import tomastk.shelty.models.payloads.MensajeResponse;
 import tomastk.shelty.models.validators.RefugioValidator;
-import tomastk.shelty.services.impl.AnimalImpl;
-import tomastk.shelty.services.impl.RefugioImpl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,6 +33,8 @@ public class RefugioController {
     AnimalImpl animalService;
     @Autowired
     Logger logger;
+    @Autowired
+    UserDataImpl userService;
 
     @Autowired
     private ResponseImpl responseService;
@@ -76,7 +75,7 @@ public class RefugioController {
 
         RefugioValidator validator = new RefugioValidator();
 
-        long userRequestId = SecurityContextHandler.getUserId();
+        long userRequestId = AdminSecurityContextHandler.getUserId();
 
         List<Long> administradores = List.of(userRequestId);
 
@@ -85,7 +84,9 @@ public class RefugioController {
                 .nombre(request.getNombre())
                 .animales(new ArrayList<>())
                 .administradores(administradores)
+                .creatorID(userRequestId)
                 .build();
+
         errors = validator.validate(buildRefugioDTO(entityToCreate));
 
         if (!errors.isEmpty()){
@@ -102,6 +103,57 @@ public class RefugioController {
         } catch (DataAccessException de) {
             logger.error(de.getMessage());
             errors.put(Messages.creationError, Messages.detailCreationError(ENTITY_NAME));
+            return responseService.sendErrorResponse(errors, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("refugio/{refugioId}/add-administrator")
+    public ResponseEntity<MensajeResponse> addAdmin(@PathVariable int refugioId, @RequestParam long id) {
+
+        Refugio refugioToEdit = service.findById(refugioId);
+
+        Map<String, String> errors = new HashMap<>();
+
+        boolean administradorNuevoExiste = userService.existsById(id);
+
+        if (!administradorNuevoExiste) {
+            errors.put(Messages.nonFoundError, Messages.detailNotFoundError("usuario"));
+            return responseService.sendErrorResponse(
+                errors,
+                HttpStatus.NOT_FOUND
+            );
+        }
+
+        List<Long> administradores = refugioToEdit.getAdministradores();
+
+        if (administradores.contains(id)) {
+            errors.put(Messages.conflictError, "Este usuario ya es un administrador del refugio");
+            return responseService.sendErrorResponse(
+                    errors,
+                    HttpStatus.CONFLICT
+            );
+        }
+
+        if (!administradores.contains(AdminSecurityContextHandler.getUserId())) {
+            errors.put(Messages.nonAuthorizatedError, Messages.detailNonAuthorizatedError(ENTITY_NAME));
+            return responseService.sendErrorResponse(
+                    errors,
+                    HttpStatus.UNAUTHORIZED
+            );
+        }
+        try {
+            String response = "Se ha añadido el usuario de id " + id + " como administrador del refugio";
+            administradores.add(id);
+            refugioToEdit.setAdministradores(administradores);
+            service.save(refugioToEdit);
+            return responseService.sendSuccessResponse(
+                    response,
+                    null,
+                    HttpStatus.CREATED
+            );
+        } catch (DataAccessException ex) {
+            errors.put(Messages.editionError, Messages.detailEditionError(ENTITY_NAME));
+            logger.error(ex.getMessage());
             return responseService.sendErrorResponse(errors, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -156,6 +208,58 @@ public class RefugioController {
 
     }
 
+    @DeleteMapping("refugio/{id_refugio}/delete-administrator")
+    public ResponseEntity<MensajeResponse> deleteAdmin(@PathVariable int id_refugio, @RequestParam long id) {
+        Refugio refugioToEdit = service.findById(id_refugio);
+        Map<String, String> errors = new HashMap<>();
+        if (refugioToEdit == null) {
+            errors.put(Messages.nonFoundError, Messages.detailNotFoundError(ENTITY_NAME));
+            return responseService.sendErrorResponse(
+                    errors,
+                    HttpStatus.NOT_FOUND
+            );
+        }
+
+        if (refugioToEdit.getCreatorID() != AdminSecurityContextHandler.getUserId()) {
+            errors.put(Messages.nonAuthorizatedError, "Solo el creador puede eliminar al administrador de un refugio");
+            return responseService.sendErrorResponse(
+                    errors,
+                    HttpStatus.UNAUTHORIZED
+            );
+        }
+
+        List<Long> administradoresActuales = refugioToEdit.getAdministradores();
+
+        if (!administradoresActuales.contains(id)) {
+            errors.put(Messages.deletingError, "El usuario que deseas eliminar no es administrador del refugio");
+            return responseService.sendErrorResponse(
+                    errors,
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        administradoresActuales.remove(id);
+        refugioToEdit.setAdministradores(administradoresActuales);
+
+        try {
+            service.save(refugioToEdit);
+            return responseService.sendSuccessResponse(
+                    "Se ha eliminado correctamente al usuario con id " + id + " como administrador del refugio",
+                    refugioToEdit,
+                    HttpStatus.CREATED
+            );
+        } catch (DataAccessException ex) {
+            logger.error(ex.getMessage());
+            errors.put(Messages.deletingError, "usuario");
+            return responseService.sendErrorResponse(
+                    errors,
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+
+
+    }
+
     // Put
     @PutMapping("refugio/{entityRequestID}")
     public ResponseEntity<MensajeResponse> update(@PathVariable int entityRequestID, @RequestBody CreateRefugioRequest entityData){
@@ -174,7 +278,7 @@ public class RefugioController {
 
         }
 
-        long userRequestID = SecurityContextHandler.getUserId();
+        long userRequestID = AdminSecurityContextHandler.getUserId();
 
         if (!refugioToUpdate.getAdministradores().contains(userRequestID)) {
             errors.put(Messages.nonAuthorizatedError, Messages.detailNonAuthorizatedError(ENTITY_NAME));
@@ -220,7 +324,7 @@ public class RefugioController {
             );
         }
 
-        long userRequestID = SecurityContextHandler.getUserId();
+        long userRequestID = AdminSecurityContextHandler.getUserId();
 
         if (!refugioToDelete.getAdministradores().contains(userRequestID)) {
             errors.put(Messages.nonAuthorizatedError, Messages.detailNonAuthorizatedError(ENTITY_NAME));

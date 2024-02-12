@@ -13,13 +13,11 @@ import tomastk.shelty.models.payloads.MensajeResponse;
 import tomastk.shelty.models.validators.EspecieValidator;
 import tomastk.shelty.services.impl.EspecieImpl;
 import tomastk.shelty.services.impl.ResponseImpl;
-import tomastk.shelty.services.impl.SecurityContextHandler;
+import tomastk.shelty.services.impl.AdminSecurityContextHandler;
 import tomastk.shelty.user.Role;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -48,7 +46,7 @@ public class EspecieController {
     public ResponseEntity<MensajeResponse> postEspecie(@RequestBody EspecieDTO especie) {
         Map<String, String> errors = new HashMap<>();
 
-        if (SecurityContextHandler.getUserRole() != Role.ADMIN) {
+        if (AdminSecurityContextHandler.getUserRole() != Role.ADMIN) {
             errors.put(Messages.nonAuthorizatedError, Messages.detailNonAuthorizatedError(ENTITY_NAME));
             return responseService.sendErrorResponse(errors, HttpStatus.UNAUTHORIZED);
         }
@@ -88,7 +86,7 @@ public class EspecieController {
     public ResponseEntity<MensajeResponse> putEspecie(@PathVariable long id, @RequestBody EspecieDTO especie) {
         Map<String, String> errors = new HashMap<>();
 
-        if (SecurityContextHandler.getUserRole() != Role.ADMIN) {
+        if (AdminSecurityContextHandler.getUserRole() != Role.ADMIN) {
             errors.put(Messages.nonAuthorizatedError, Messages.detailNonAuthorizatedError(ENTITY_NAME));
             return responseService.sendErrorResponse(errors, HttpStatus.UNAUTHORIZED);
         }
@@ -123,7 +121,7 @@ public class EspecieController {
     public ResponseEntity<MensajeResponse> deleteEspecie(@PathVariable long id) {
         Map<String, String> errors = new HashMap<>();
 
-        if (SecurityContextHandler.getUserRole() != Role.ADMIN) {
+        if (AdminSecurityContextHandler.getUserRole() != Role.ADMIN) {
             errors.put(Messages.nonAuthorizatedError, Messages.detailNonAuthorizatedError(ENTITY_NAME));
             return responseService.sendErrorResponse(errors, HttpStatus.UNAUTHORIZED);
         }

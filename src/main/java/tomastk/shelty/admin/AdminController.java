@@ -19,14 +19,13 @@ public class AdminController {
     public ResponseEntity<AdminResponse> createAdmin(@RequestBody AdminRequest createDetails) {
         return ResponseEntity.ok(adminService.createAdmin(createDetails));
     }
-    @PostMapping("/update")
+    @PutMapping("/update")
     public ResponseEntity<AdminResponse> updateAdmin(@RequestBody User adminToUpdate) {
         return ResponseEntity.ok(adminService.updateAdmin(adminToUpdate));
     }
 
-    @PostMapping("/delete")
-    public ResponseEntity<String> deleteAdmin() {
-        int id = 2042;
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> deleteAdmin(@PathVariable int id) {
         return ResponseEntity.ok(adminService.deleteAdmin(id));
     }
 

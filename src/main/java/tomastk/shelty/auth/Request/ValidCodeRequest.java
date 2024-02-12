@@ -1,4 +1,4 @@
-package tomastk.shelty.auth.RegisterRequest;
+package tomastk.shelty.auth.Request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,8 +7,9 @@ import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
+@Builder
 @NoArgsConstructor
-public class UserRequest {
+public class ValidCodeRequest {
     String username;
-    String password;
+    String code;
 }

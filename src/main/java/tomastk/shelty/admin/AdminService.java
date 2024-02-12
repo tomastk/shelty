@@ -23,15 +23,12 @@ public class AdminService {
     private final PasswordEncoder passwordEncoder;
 
     public AdminResponse createAdmin(AdminRequest createDetails) {
-
         User admin = User.builder()
                 .role(Role.ADMIN)
                 .password(passwordEncoder.encode(createDetails.getPassword()))
                 .username(createDetails.getUsername())
                 .build();
-
         Optional<User> optAdmin = userRepository.findByUsername(createDetails.getUsername());
-
         if (optAdmin.isPresent()) {
             return AdminResponse.builder()
                     .authError("An administrator with those credentials already exists.")

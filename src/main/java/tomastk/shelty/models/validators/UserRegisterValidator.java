@@ -1,11 +1,9 @@
 package tomastk.shelty.models.validators;
 
 import org.springframework.stereotype.Component;
-import tomastk.shelty.auth.RegisterRequest.UserRequest;
+import tomastk.shelty.auth.Request.UserRequest;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Component

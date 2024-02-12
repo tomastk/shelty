@@ -3,6 +3,7 @@ package tomastk.shelty.services.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tomastk.shelty.models.daos.RefugioDAO;
+import tomastk.shelty.models.dtos.RefugioDTO;
 import tomastk.shelty.models.entities.Refugio;
 import tomastk.shelty.services.IRefugioService;
 
@@ -37,5 +38,9 @@ public class RefugioImpl implements IRefugioService {
     @Override
     public boolean existsById(long id) {
         return refugioDAO.existsById(id);
+    }
+
+    public List<Refugio> getByUser(long id) {
+        return refugioDAO.getByUserId(id);
     }
 }

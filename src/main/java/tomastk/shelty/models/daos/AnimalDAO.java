@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import tomastk.shelty.models.entities.Animal;
 
+
 import java.util.List;
 
 public interface AnimalDAO extends JpaRepository<Animal, Long> {
