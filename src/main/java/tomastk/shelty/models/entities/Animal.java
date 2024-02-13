@@ -3,10 +3,12 @@ package tomastk.shelty.models.entities;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.*;
-import tomastk.shelty.user.User;
+import tomastk.shelty.models.animalEnums.Comportamiento;
+import tomastk.shelty.models.animalEnums.Especie;
+import tomastk.shelty.models.animalEnums.Genero;
+import tomastk.shelty.models.animalEnums.Size;
 
 import java.io.Serializable;
-import java.util.List;
 
 
 @Data
@@ -25,12 +27,11 @@ public class Animal implements Serializable {
     private long id;
     private String nombre;
 
-    @ManyToOne
-    @JoinColumn(name="especie_id")
-    @JsonBackReference
-    private Especie especie;
+    @Enumerated(EnumType.STRING)
+    private Genero genero;
 
-    private String imgUrl;
+    @Enumerated(EnumType.STRING)
+    private Especie especie;
 
     @ManyToOne
     @JsonIdentityReference(alwaysAsId = true)
@@ -38,6 +39,26 @@ public class Animal implements Serializable {
     @JsonBackReference
     private Refugio refugio;
 
-    private long ownerId;
+    @OneToOne
+    @JoinColumn(name="picture_id")
+    private Picture picture;
 
+    @Enumerated(EnumType.STRING)
+    private Size size;
+
+    @Enumerated(EnumType.STRING)
+    private Comportamiento comportamientoConAnimales;
+
+    @Enumerated(EnumType.STRING)
+    private Comportamiento comportamientoConPersonas;
+
+    boolean desparasitado;
+
+    String enfermedad;
+    String cuidadosEspeciales;
+    String cuidadosExtra;
+
+    String longDescription;
+
+    private long ownerId;
 }

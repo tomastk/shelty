@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import tomastk.shelty.jwtconfig.JwtAuthenticationFilter;
 import tomastk.shelty.user.Role;
 
@@ -44,22 +45,23 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(authRequest ->
-                authRequest
-                .requestMatchers(publicUrls).permitAll()
-                .requestMatchers("/admin/create").hasAuthority(Role.SUPER_ADMIN.name())
-                .requestMatchers("/admin/**").hasAnyAuthority(Role.ADMIN.name(), Role.SUPER_ADMIN.name())
-                .requestMatchers(HttpMethod.GET, "/api/v1/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .sessionManagement(sessionManager -> {
-                sessionManager
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-            })
-            .authenticationProvider(authProvider)
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .formLogin(Customizer.withDefaults())
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(authRequest ->
+                        authRequest
+                                .requestMatchers(publicUrls).permitAll()
+                                .requestMatchers(HttpMethod.OPTIONS,"/**").permitAll() // CORS preflight request
+                                .requestMatchers("/admin/create").hasAuthority(Role.SUPER_ADMIN.name())
+                                .requestMatchers("/admin/**").hasAnyAuthority(Role.ADMIN.name(), Role.SUPER_ADMIN.name())
+                                .requestMatchers(HttpMethod.GET, "/api/v1/**").permitAll()
+                                .anyRequest().authenticated()
+                )
+                .sessionManagement(sessionManager -> {
+                    sessionManager
+                            .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+                })
+                .authenticationProvider(authProvider)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .formLogin(Customizer.withDefaults())
                 .build();
     }
 

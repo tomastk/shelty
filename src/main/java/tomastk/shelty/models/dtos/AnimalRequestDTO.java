@@ -14,7 +14,7 @@ import java.io.Serializable;
 
 public class AnimalRequestDTO implements Serializable {
     private String nombre;
-    private long especie_id;
+    private int especie_id;
     private String img_url;
     private long refugio_id;
 }

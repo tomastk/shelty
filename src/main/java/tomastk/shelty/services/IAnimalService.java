@@ -13,7 +13,6 @@ public interface IAnimalService {
     void delete(Animal animal);
     List<Animal> getAll();
     boolean existsById(long id);
-    Page<Animal> getByEspecie(long id, Pageable pageable);
     Page<Animal> findAll(Pageable pageable);
 
 }

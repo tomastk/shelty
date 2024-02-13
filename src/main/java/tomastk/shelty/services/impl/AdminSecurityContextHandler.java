@@ -7,6 +7,7 @@ import tomastk.shelty.user.User;
 
 public class AdminSecurityContextHandler {
     public static User getUser() {
+        System.out.println(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
     public static Role getUserRole() {

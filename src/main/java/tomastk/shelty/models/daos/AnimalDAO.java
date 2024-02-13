@@ -10,7 +10,4 @@ import tomastk.shelty.models.entities.Animal;
 
 
 public interface AnimalDAO extends JpaRepository<Animal, Long> {
-
-    @Query("SELECT a FROM Animal a WHERE a.especie.id = :especieId")
-    Page<Animal> getAnimalByEspecie(@Param("especieId") long especieId, Pageable pageable);
 }

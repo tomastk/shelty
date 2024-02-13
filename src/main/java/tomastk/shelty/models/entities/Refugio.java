@@ -16,13 +16,43 @@ import java.util.List;
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @Entity
 @Table(name = "Refugios", uniqueConstraints = {@UniqueConstraint(columnNames = {"nombre"}) })
+
+
 public class Refugio {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     private String nombre;
-    private String imgUrl;
+
+    @OneToOne
+    @JoinColumn(name="picture_id")
+    private Picture picture;
+
+    @OneToOne
+    @JoinColumn(name="social_links_id")
+    private SocialLinks social_links;
+
+    private String main_link;
+
+    @ManyToOne
+    @JoinColumn(name="location_id")
+    private Location location;
+
+
+    private String short_description;
+
+    private String donation_link;
+
+    private String maps_data;
+
+    private String historia;
+
+    private String youtubevideo;
+
+    @ManyToOne
+    @JoinColumn(name="main_animal_id")
+    private Animal mainAnimal;
 
     @OneToMany(mappedBy = "refugio", cascade = CascadeType.ALL)
     @JsonManagedReference

@@ -42,10 +42,6 @@ public class AnimalImpl implements IAnimalService {
         return animalDAO.existsById(id);
     }
 
-    @Override
-    public Page<Animal> getByEspecie(long id, Pageable pageable) {
-        return animalDAO.getAnimalByEspecie(id, pageable);
-    }
 
     @Override
     public Page<Animal> findAll(Pageable pageable) {

@@ -15,6 +15,7 @@ import tomastk.shelty.user.Role;
 
 @RestController
 @RequestMapping("user/")
+@CrossOrigin(origins = "*", maxAge = 3600)
 
 public class UserDataController {
     @Autowired

@@ -10,6 +10,7 @@ import tomastk.shelty.user.UserDTO;
 
 @RestController
 @RequestMapping("/auth")
+@CrossOrigin(origins = "*", maxAge = 3600)
 @AllArgsConstructor
 public class AuthController {
 
@@ -38,7 +39,6 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<AuthResponse> resetPasswordHandler(@RequestBody ResetPasswordRequest resetPasswordRequest){
         return ResponseEntity.ok(authService.resetPassword(resetPasswordRequest.getUsername(), resetPasswordRequest.getPassword()));
-
     }
 
 }

@@ -1,4 +1,4 @@
-package tomastk.shelty.controllers;
+package tomastk.shelty.controllers.Refugio;
 
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,23 +7,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tomastk.shelty.config.Messages;
+import tomastk.shelty.models.entities.Picture;
 import tomastk.shelty.services.impl.*;
 import tomastk.shelty.models.dtos.RefugioDTO;
 import tomastk.shelty.models.entities.Animal;
 import tomastk.shelty.models.entities.Refugio;
-import tomastk.shelty.models.payloads.CreateRefugioRequest;
+import tomastk.shelty.models.payloads.Refugio.CreateRefugioRequest;
 import tomastk.shelty.models.payloads.MensajeResponse;
-import tomastk.shelty.models.validators.RefugioValidator;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1")
-
-
+@CrossOrigin
 public class RefugioController {
 
     public static final String ENTITY_NAME = "refugio";
@@ -31,6 +29,8 @@ public class RefugioController {
     RefugioImpl service;
     @Autowired
     AnimalImpl animalService;
+    @Autowired
+    PictureImpl pictureService;
     @Autowired
     Logger logger;
     @Autowired
@@ -59,39 +59,41 @@ public class RefugioController {
             return responseService.sendErrorResponse(errors, HttpStatus.NOT_FOUND);
         }
 
-        RefugioDTO refugioBuilded = buildRefugioDTO(refugioFinded);
 
         return responseService.sendSuccessResponse(
                 null,
-                refugioBuilded,
+                refugioFinded,
                 HttpStatus.OK
         );
+    }
+
+    @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true") // pa que acepte credenciales
+    @GetMapping("refugio/mis-refugios")
+    public ResponseEntity<MensajeResponse> getByUserId() {
+        long userId = AdminSecurityContextHandler.getUserId();
+        List<Refugio> refugios = service.getByUser(userId);
+        if (refugios.isEmpty()) {
+            return responseService.sendErrorResponse(Map.of(Messages.nonFoundError, Messages.detailNotFoundError(ENTITY_NAME)), HttpStatus.NOT_FOUND);
+        }
+        System.out.println("Hemos entrado al controlador");
+        return responseService.sendSuccessResponse(null, refugios, HttpStatus.OK);
     }
 
     // Post
     @PostMapping("refugio")
     public ResponseEntity<MensajeResponse> create(@RequestBody CreateRefugioRequest request) {
-        Map<String, String> errors;
-
-        RefugioValidator validator = new RefugioValidator();
-
+        Map<String, String> errors = new HashMap<>();
         long userRequestId = AdminSecurityContextHandler.getUserId();
 
         List<Long> administradores = List.of(userRequestId);
+        Picture refugioPicture = pictureService.save(Picture.builder().profilePicture(request.getProfilePicture()).build());
 
         Refugio entityToCreate = Refugio.builder()
-                .imgUrl(request.getImgUrl())
-                .nombre(request.getNombre())
-                .animales(new ArrayList<>())
                 .administradores(administradores)
+                .picture(refugioPicture)
                 .creatorID(userRequestId)
+                .short_description(request.getShortDescription())
                 .build();
-
-        errors = validator.validate(buildRefugioDTO(entityToCreate));
-
-        if (!errors.isEmpty()){
-            return responseService.sendErrorResponse(errors, HttpStatus.BAD_REQUEST);
-        }
 
         try {
             Refugio entitySaved = service.save(entityToCreate);
@@ -260,55 +262,6 @@ public class RefugioController {
 
     }
 
-    // Put
-    @PutMapping("refugio/{entityRequestID}")
-    public ResponseEntity<MensajeResponse> update(@PathVariable int entityRequestID, @RequestBody CreateRefugioRequest entityData){
-        // TODO: VALIDAR CRENDENCIALES
-        Map<String, String> errors = new HashMap<>();
-
-        Refugio refugioToUpdate = service.findById(entityRequestID);
-
-        if (refugioToUpdate == null) {
-            errors.put(Messages.nonFoundError, Messages.detailNotFoundError(ENTITY_NAME));
-
-            return responseService.sendErrorResponse(
-                    errors,
-                    HttpStatus.NOT_FOUND
-            );
-
-        }
-
-        long userRequestID = AdminSecurityContextHandler.getUserId();
-
-        if (!refugioToUpdate.getAdministradores().contains(userRequestID)) {
-            errors.put(Messages.nonAuthorizatedError, Messages.detailNonAuthorizatedError(ENTITY_NAME));
-            return responseService.sendErrorResponse(errors, HttpStatus.UNAUTHORIZED);
-        }
-
-        refugioToUpdate.setNombre(entityData.getNombre());
-        refugioToUpdate.setImgUrl(entityData.getImgUrl());
-        RefugioValidator validator = new RefugioValidator();
-        errors = validator.validate(buildRefugioDTO(refugioToUpdate));
-
-        if (!errors.isEmpty()){
-            return responseService.sendErrorResponse(errors, HttpStatus.BAD_REQUEST);
-        }
-
-        try {
-            service.save(refugioToUpdate);
-
-            return responseService.sendSuccessResponse(
-                    Messages.detailsSuccessCreation(ENTITY_NAME),
-                    refugioToUpdate,
-                    HttpStatus.CREATED
-            );
-
-        } catch (DataAccessException ex) {
-            logger.error(ex.getMessage());
-            errors.put(Messages.editionError, Messages.detailEditionError(ENTITY_NAME));
-            return responseService.sendErrorResponse(errors, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
 
     @DeleteMapping("refugio/{id}")
     public ResponseEntity<MensajeResponse> delete(@PathVariable int id){
@@ -360,8 +313,11 @@ public class RefugioController {
                 .id(refugio.getId())
                 .nombre(refugio.getNombre())
                 .animales(refugio.getAnimales())
-                .imgUrl(refugio.getImgUrl())
                 .build();
     }
+
+    /* CREATE REFUGIO AND PICTURE */
+
+
 
 }
