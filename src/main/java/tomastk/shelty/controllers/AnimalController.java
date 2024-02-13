@@ -19,9 +19,8 @@ import tomastk.shelty.models.entities.Refugio;
 import tomastk.shelty.models.payloads.MensajeResponse;
 import tomastk.shelty.models.validators.AnimalValidator;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -43,30 +42,30 @@ public class AnimalController {
     private RefugioImpl refugioService;
 
     @GetMapping(value = "animales", params = {"page", "size"})
-    public ResponseEntity<List> getAll(Pageable pageable) {
+    public ResponseEntity<List<AnimalResponseDTO>> getAll(Pageable pageable) {
         Page<Animal> animales = service.findAll(pageable);
-        if (animales.isEmpty()) {
-            return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
-        }
-        return new ResponseEntity<>(animales.getContent(), HttpStatus.OK);
+
+        List<AnimalResponseDTO> response = animales.getContent().stream()
+                .map(this::buildAnimalResponse)
+                .collect(Collectors.toList());
+
+        return animales.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(response);
     }
 
-    @GetMapping(value = "animales/byEspecie={id}", params = {"page", "size"})
+    @GetMapping(value = "animales/byEspecie={id}")
     public ResponseEntity<MensajeResponse> getByEspecieId(@PathVariable long id, Pageable pageable) {
         return responseService.sendSuccessResponse(
                 null,
-                service.getByEspecie(id, pageable).getContent(),
+                service.getByEspecie(id, pageable),
                 HttpStatus.OK
         );
     }
 
+
     @GetMapping("animal/{id}")
-    public ResponseEntity<AnimalRequestDTO> getAnimal(@PathVariable int id) {
+    public ResponseEntity<AnimalResponseDTO> getAnimal(@PathVariable int id) {
         Animal animalFinded = service.findById(id);
-        if (animalFinded != null) {
-            return new ResponseEntity<>(buildAnimalWithIdDTO(animalFinded), HttpStatus.OK);
-        }
-        return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        return (animalFinded != null) ? new ResponseEntity<>(buildAnimalResponse(animalFinded), HttpStatus.OK) : new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
     }
 
     // Post
@@ -76,11 +75,11 @@ public class AnimalController {
 
         Especie animalEspecie = especieService.findById(animalToCreate.getEspecie_id());
 
-        Map<String, String> errors = new HashMap<>();
-
         if (animalEspecie == null) {
-            errors.put(Messages.creationError, Messages.detailNullFieldError(ENTITY_NAME, "especie"));
-            return responseService.sendErrorResponse(errors, HttpStatus.BAD_REQUEST);
+            return responseService.sendErrorResponse(
+                    Map.of(Messages.creationError, Messages.detailNullFieldError(ENTITY_NAME, "especie")),
+                    HttpStatus.BAD_REQUEST
+            );
         }
 
         Animal newAnimal = Animal.builder()
@@ -92,25 +91,28 @@ public class AnimalController {
                 .build();
 
         AnimalValidator validator = new AnimalValidator();
-        errors = validator.validate(buildAnimalDTO(newAnimal));
+        Map<String, String> errors = validator.validate(buildAnimalDTO(newAnimal));
 
         if (!errors.isEmpty()){
             return responseService.sendErrorResponse(errors, HttpStatus.BAD_REQUEST);
         }
+
         try {
             service.save(newAnimal);
+            return responseService.sendSuccessResponse(
+                    Messages.detailsSuccessCreation(ENTITY_NAME),
+                    buildAnimalResponse(newAnimal),
+                    HttpStatus.CREATED
+            );
         } catch (DataAccessException de) {
-            errors.put(Messages.creationError, Messages.detailCreationError(ENTITY_NAME));
             logger.error(de.getMessage());
-            return responseService.sendErrorResponse(errors, HttpStatus.INTERNAL_SERVER_ERROR);
+            return responseService.sendErrorResponse(
+                    Map.of(Messages.creationError, Messages.detailCreationError(ENTITY_NAME)),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
-
-        return responseService.sendSuccessResponse(
-                Messages.detailsSuccessCreation(ENTITY_NAME),
-                buildAnimalWithIdDTO(newAnimal),
-                HttpStatus.CREATED
-        );
     }
+
 
     // Put
     @PutMapping("animal/{id}")
@@ -151,7 +153,7 @@ public class AnimalController {
             Animal animalUpdated = service.save(animalToUpdate);
             return responseService.sendSuccessResponse(
                     Messages.detailsSuccessEdition(ENTITY_NAME),
-                    buildAnimalWithIdDTO(animalUpdated),
+                    buildAnimalResponse(animalUpdated),
                     HttpStatus.OK
             );
         } catch (DataAccessException ex) {
@@ -185,7 +187,7 @@ public class AnimalController {
             service.delete(animalToDelete);
             return responseService.sendSuccessResponse(
                     Messages.detailsSuccessDeleting(ENTITY_NAME),
-                    buildAnimalWithIdDTO(animalToDelete),
+                    buildAnimalResponse(animalToDelete),
                     HttpStatus.OK
             );
 
@@ -222,19 +224,19 @@ public class AnimalController {
                 .build();
     }
 
-    public AnimalResponseDTO buildAnimalWithIdDTO(Animal animal) {
-        AnimalResponseDTO animalWithIdDTO = new AnimalResponseDTO();
-        animalWithIdDTO.setNombre(animal.getNombre());
+    public AnimalResponseDTO buildAnimalResponse(Animal animal) {
+        AnimalResponseDTO animalResponse = new AnimalResponseDTO();
 
         if (animal.getRefugio() != null) {
-            animalWithIdDTO.setRefugio_id(animal.getRefugio().getId());
+            animalResponse.setRefugio(animal.getRefugio().getNombre());
         }
 
-        animalWithIdDTO.setImg_url(animal.getImgUrl());
-        animalWithIdDTO.setEspecie_id(animal.getEspecie().getId());
-        animalWithIdDTO.setImg_url(animal.getImgUrl());
-        animalWithIdDTO.setId(animal.getId());
-        return animalWithIdDTO;
+        animalResponse.setEspecie(animal.getEspecie().getNombre());
+        animalResponse.setNombre(animal.getNombre());
+        animalResponse.setImg_url(animal.getImgUrl());
+        animalResponse.setImg_url(animal.getImgUrl());
+        animalResponse.setId(animal.getId());
+        return animalResponse;
     }
 
     /* BUILD ANIMAL DTO

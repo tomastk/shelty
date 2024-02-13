@@ -10,6 +10,7 @@ import java.util.List;
 @Repository
 public interface RefugioDAO extends JpaRepository<Refugio, Long> {
 
+
     @Query("SELECT r FROM Refugio r WHERE :userId MEMBER OF r.administradores")
     List<Refugio> getByUserId(long userId);
 

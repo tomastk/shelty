@@ -15,7 +15,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
+@JsonInclude(JsonInclude.Include.NON_NULL) // Excluir propiedades nulas
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @Entity
 @Table(name = "Animal")
@@ -33,6 +33,7 @@ public class Animal implements Serializable {
     private String imgUrl;
 
     @ManyToOne
+    @JsonIdentityReference(alwaysAsId = true)
     @JoinColumn(name = "refugio_id")
     @JsonBackReference
     private Refugio refugio;

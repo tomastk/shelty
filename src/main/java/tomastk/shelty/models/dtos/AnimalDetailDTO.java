@@ -2,19 +2,17 @@ package tomastk.shelty.models.dtos;
 
 import lombok.*;
 
-import java.io.Serializable;
-
 @Data
 @Getter
 @Setter
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-
-public class AnimalResponseDTO implements Serializable {
+@Builder
+public class AnimalDetailDTO {
     private long id;
     private String nombre;
-    private String especie;
     private String img_url;
-    private String refugio;
+    private String descripcion;
+    private String especie;
 }

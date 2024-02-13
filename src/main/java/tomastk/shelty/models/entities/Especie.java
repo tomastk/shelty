@@ -1,9 +1,7 @@
 package tomastk.shelty.models.entities;
 
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,9 +12,9 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Getter
+@JsonInclude(JsonInclude.Include.NON_NULL) // Excluir propiedades nulas
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @Setter
-@ToString
 
 public class Especie {
     @Id
@@ -27,6 +25,7 @@ public class Especie {
     private String img_url;
 
     @OneToMany(mappedBy = "especie", cascade = CascadeType.ALL)
+    @JsonIdentityReference(alwaysAsId = true)
     @JsonManagedReference
 
     private List<Animal> animales;
